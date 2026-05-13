@@ -1,6 +1,6 @@
 {
-    "name": "xpense",
-    "short_name": "xpense",
+    "name": "Xpense Tracker",
+    "short_name": "Xpense Tracker",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

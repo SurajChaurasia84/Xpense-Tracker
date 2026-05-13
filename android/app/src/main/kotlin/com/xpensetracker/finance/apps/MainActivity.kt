@@ -1,4 +1,4 @@
-package com.example.xpense
+package com.xpensetracker.finance.apps
 
 import io.flutter.embedding.android.FlutterActivity
 

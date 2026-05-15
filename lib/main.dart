@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         Provider<DatabaseService>(create: (_) => DatabaseService()),
-        Provider<SecurityService>(create: (_) => SecurityService()),
+        ChangeNotifierProvider<SecurityService>(create: (_) => SecurityService()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -81,7 +81,8 @@ class _LockWrapperState extends State<LockWrapper> {
 
   Future<void> _checkLock() async {
     final security = SecurityService();
-    _isLockEnabled = await security.isLockEnabled();
+    await security.init(); // Ensure it's loaded from SharedPreferences
+    _isLockEnabled = security.isLockEnabledValue;
     
     if (!_isLockEnabled) {
       setState(() {

@@ -44,6 +44,13 @@ class _TransactionsTabState extends State<TransactionsTab> with SingleTickerProv
       children: [
         const SizedBox(height: 50),
         _buildHeader(),
+        const SizedBox(height: 4),
+        Center(
+          child: Text(
+            'Track your income and expenses easily',
+            style: GoogleFonts.inter(fontSize: 12, color: Colors.black38),
+          ),
+        ),
         _buildSearchAndFilter(),
         _buildFilterTabs(),
         Expanded(

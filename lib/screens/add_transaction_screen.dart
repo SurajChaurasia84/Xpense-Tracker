@@ -15,7 +15,7 @@ class AddTransactionScreen extends StatefulWidget {
 class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
-  String _selectedCategory = 'Food';
+  String _selectedCategory = ''; // No default category
   TransactionType _selectedType = TransactionType.expense;
   bool _isLoading = false;
 
@@ -139,11 +139,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         ? AppCategories.incomeCategories
         : AppCategories.expenseCategories;
 
-    // Ensure _selectedCategory is valid for the current type
-    if (!categories.containsKey(_selectedCategory)) {
-      _selectedCategory = categories.keys.first;
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -216,9 +211,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   }
 
   Future<void> _submit() async {
-    if (_titleController.text.isEmpty || _amountController.text.isEmpty) {
+    if (_titleController.text.isEmpty || _amountController.text.isEmpty || _selectedCategory.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields')),
+        const SnackBar(content: Text('Please fill all fields and select a category')),
       );
       return;
     }

@@ -40,7 +40,25 @@ class _MainScreenState extends State<MainScreen> {
       },
       child: Scaffold(
         backgroundColor: const Color(0xFFF8F9FB),
-        body: _screens[_currentIndex],
+        body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        transitionBuilder: (Widget child, Animation<double> animation) {
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.02, 0),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
+            ),
+          );
+        },
+        child: Container(
+          key: ValueKey<int>(_currentIndex),
+          child: _screens[_currentIndex],
+        ),
+      ),
         
         bottomNavigationBar: BottomAppBar(
           color: Colors.white,
@@ -57,40 +75,44 @@ class _MainScreenState extends State<MainScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _navItem(Icons.home, Icons.home_outlined, 'Home', 0),
-                _navItem(Icons.payments, Icons.payments_outlined, 'Transactions', 1),
+                Expanded(child: _navItem(Icons.home, Icons.home_outlined, 'Home', 0)),
+                Expanded(child: _navItem(Icons.payments, Icons.payments_outlined, 'Transactions', 1)),
                 
                 // Integrated "+" button
-                Transform.translate(
-                  offset: const Offset(0, -16),
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const AddTransactionScreen()),
-                      );
-                    },
-                    child: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: themeColor,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: themeColor.withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
+                Expanded(
+                  child: Center(
+                    child: Transform.translate(
+                      offset: const Offset(0, -16),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const AddTransactionScreen()),
+                          );
+                        },
+                        child: Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: themeColor,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: themeColor.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
                           ),
-                        ],
+                          child: const Icon(Icons.add, color: Colors.white, size: 28),
+                        ),
                       ),
-                      child: const Icon(Icons.add, color: Colors.white, size: 28),
                     ),
                   ),
                 ),
                 
-                _navItem(Icons.account_balance_wallet, Icons.account_balance_wallet_outlined, 'Budget', 3),
-                _navItem(Icons.person, Icons.person_outline, 'Profile', 4),
+                Expanded(child: _navItem(Icons.account_balance_wallet, Icons.account_balance_wallet_outlined, 'Budget', 3)),
+                Expanded(child: _navItem(Icons.person, Icons.person_outline, 'Profile', 4)),
               ],
             ),
           ),

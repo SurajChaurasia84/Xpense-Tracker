@@ -153,7 +153,7 @@ class ProfileScreen extends StatelessWidget {
                                 Icons.privacy_tip_outlined, 
                                 'Privacy Policy', 
                                 'How we protect your data',
-                                onTap: () => launchUrl(Uri.parse('https://surajchaurasia84.github.io/privacy-policy/')),
+                                onTap: () => launchUrl(Uri.parse('https://surajchaurasia84.github.io/Xpense-Tracker/')),
                               ),
                               _buildSettingsItem(
                                 Icons.share_outlined, 
@@ -204,20 +204,33 @@ class ProfileScreen extends StatelessWidget {
                               
                               // App Version
                               Center(
-                                child: FutureBuilder<PackageInfo>(
-                                  future: PackageInfo.fromPlatform(),
-                                  builder: (context, snapshot) {
-                                    final version = snapshot.data?.version ?? '1.0.0';
-                                    final buildNumber = snapshot.data?.buildNumber ?? '1';
-                                    return Text(
-                                      'Version $version ($buildNumber)',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 12,
-                                        color: Colors.black26,
-                                        fontWeight: FontWeight.w500,
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      'Xpense Tracker',
+                                      style: GoogleFonts.outfit(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
                                       ),
-                                    );
-                                  },
+                                    ),
+                                    const SizedBox(height: 4),
+                                    FutureBuilder<PackageInfo>(
+                                      future: PackageInfo.fromPlatform(),
+                                      builder: (context, snapshot) {
+                                        final version = snapshot.data?.version ?? '1.0.0';
+                                        final buildNumber = snapshot.data?.buildNumber ?? '1';
+                                        return Text(
+                                          'Version $version ($buildNumber)',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 12,
+                                            color: Colors.black26,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],

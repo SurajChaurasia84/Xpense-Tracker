@@ -123,7 +123,6 @@ class HomeTab extends StatelessWidget {
     final isPositive = monthlySavings >= 0;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -142,55 +141,70 @@ class HomeTab extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Total Balance',
-                style: GoogleFonts.inter(
-                  color: Colors.white.withOpacity(0.8),
-                  fontSize: 16,
-                ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: CustomPaint(
+                painter: WavePainter(),
               ),
-              const Icon(Icons.visibility_outlined, color: Colors.white70, size: 20),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            format.format(balance),
-            style: GoogleFonts.inter(
-              color: Colors.white,
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
             ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white24,
-              borderRadius: BorderRadius.circular(20),
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Total Balance',
+                        style: GoogleFonts.inter(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 16,
+                        ),
+                      ),
+                      const Icon(Icons.visibility_outlined, color: Colors.white70, size: 20),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    format.format(balance),
+                    style: GoogleFonts.inter(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isPositive ? Icons.arrow_upward : Icons.arrow_downward,
+                          color: Colors.white,
+                          size: 12,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${format.format(monthlySavings.abs())} this month',
+                          style: GoogleFonts.inter(color: Colors.white, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  isPositive ? Icons.arrow_upward : Icons.arrow_downward,
-                  color: Colors.white,
-                  size: 12,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '${format.format(monthlySavings.abs())} this month',
-                  style: GoogleFonts.inter(color: Colors.white, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -445,4 +459,37 @@ class HomeTab extends StatelessWidget {
       ),
     );
   }
+}
+
+class WavePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    var paint = Paint()
+      ..color = Colors.white.withOpacity(0.1)
+      ..style = PaintingStyle.fill;
+
+    var path = Path();
+    path.moveTo(0, size.height * 0.85);
+    path.quadraticBezierTo(size.width * 0.3, size.height * 0.88, size.width * 0.5, size.height * 0.75);
+    path.quadraticBezierTo(size.width * 0.8, size.height * 0.55, size.width, size.height * 0.6);
+    path.lineTo(size.width, size.height);
+    path.lineTo(0, size.height);
+    path.close();
+
+    canvas.drawPath(path, paint);
+
+    var path2 = Path();
+    path2.moveTo(0, size.height * 0.9);
+    path2.quadraticBezierTo(size.width * 0.4, size.height * 0.85, size.width * 0.7, size.height * 0.7);
+    path2.quadraticBezierTo(size.width * 0.9, size.height * 0.65, size.width, size.height * 0.7);
+    path2.lineTo(size.width, size.height);
+    path2.lineTo(0, size.height);
+    path2.close();
+
+    paint.color = Colors.white.withOpacity(0.05);
+    canvas.drawPath(path2, paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }

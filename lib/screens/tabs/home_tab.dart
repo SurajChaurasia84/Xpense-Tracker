@@ -9,18 +9,32 @@ import '../../services/database_service.dart';
 import '../../utils/constants.dart';
 import 'transactions_tab.dart';
 
-class HomeTab extends StatelessWidget {
+class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
 
   @override
+  State<HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<HomeTab> {
+  bool _isBalanceVisible = false;
+  late Stream<List<TransactionModel>> _transactionsStream;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final db = Provider.of<DatabaseService>(context, listen: false);
+    _transactionsStream = db.getTransactions();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final db = Provider.of<DatabaseService>(context);
     final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 0);
 
     return StreamBuilder<List<TransactionModel>>(
-      stream: db.getTransactions(),
+      stream: _transactionsStream,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -159,12 +173,23 @@ class HomeTab extends StatelessWidget {
                           fontSize: 16,
                         ),
                       ),
-                      const Icon(Icons.visibility_outlined, color: Colors.white70, size: 20),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _isBalanceVisible = !_isBalanceVisible;
+                          });
+                        },
+                        child: Icon(
+                          _isBalanceVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                          color: Colors.white70,
+                          size: 20,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    format.format(balance),
+                    _isBalanceVisible ? format.format(balance) : '₹ ••••••',
                     style: GoogleFonts.inter(
                       color: Colors.white,
                       fontSize: 32,

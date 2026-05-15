@@ -76,19 +76,11 @@ class _BudgetTabState extends State<BudgetTab> {
   }
 
   Widget _buildHeader() {
-    return Row(
-      children: [
-        const Icon(Icons.arrow_back_ios_new, size: 20),
-        Expanded(
-          child: Center(
-            child: Text(
-              'Set Budget',
-              style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ),
-        const SizedBox(width: 20),
-      ],
+    return Center(
+      child: Text(
+        'Set Budget',
+        style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
     );
   }
 

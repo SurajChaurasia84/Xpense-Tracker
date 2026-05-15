@@ -3,6 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/gestures.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,8 +29,22 @@ class _LoginScreenState extends State<LoginScreen> {
           accessToken: googleAuth.accessToken,
           idToken: googleAuth.idToken,
         );
-        await FirebaseAuth.instance.signInWithCredential(credential);
-        // Navigation will be handled by the Auth wrapper in main.dart
+        
+        // Sign in to Firebase
+        final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+        final user = userCredential.user;
+
+        // Save User Data to Firestore
+        if (user != null) {
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+            'uid': user.uid,
+            'name': user.displayName,
+            'email': user.email,
+            'photoUrl': user.photoURL,
+            'createdAt': FieldValue.serverTimestamp(),
+            'lastSeen': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+        }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -75,15 +92,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   FadeInDown(
                     duration: const Duration(milliseconds: 1000),
                     child: Container(
-                      padding: const EdgeInsets.all(20),
+                      width: 120,
+                      height: 120,
                       decoration: BoxDecoration(
                         color: themeColor.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.account_balance_wallet_rounded,
-                        size: 80,
-                        color: themeColor,
+                        borderRadius: BorderRadius.circular(24),
+                        image: const DecorationImage(
+                          image: AssetImage('assets/icon.jpeg'),
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),
@@ -123,7 +140,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   
                   const Spacer(),
                   
-                  // Terms and Checkbox
+                  //Checkbox
                   FadeInUp(
                     duration: const Duration(milliseconds: 1000),
                     delay: const Duration(milliseconds: 600),
@@ -142,11 +159,30 @@ class _LoginScreenState extends State<LoginScreen> {
                             });
                           },
                         ),
-                        Text(
-                          'By continuing, you agree to our Terms & Privacy.',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            color: Colors.black54,
+                        Expanded(
+                          child: RichText(
+                            text: TextSpan(
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: Colors.black54,
+                              ),
+                              children: [
+                                const TextSpan(text: 'By continuing, you agree to our '),
+                                TextSpan(
+                                  text: 'Terms & Privacy',
+                                  style: TextStyle(
+                                    color: themeColor,
+                                    fontWeight: FontWeight.bold,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () {
+                                      launchUrl(Uri.parse('https://google.com'));
+                                    },
+                                ),
+                                const TextSpan(text: '.'),
+                              ],
+                            ),
                           ),
                         ),
                       ],

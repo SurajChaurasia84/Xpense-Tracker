@@ -13,9 +13,27 @@ class TransactionsTab extends StatefulWidget {
   State<TransactionsTab> createState() => _TransactionsTabState();
 }
 
-class _TransactionsTabState extends State<TransactionsTab> {
+class _TransactionsTabState extends State<TransactionsTab> with SingleTickerProviderStateMixin {
   int _selectedFilter = 0; // 0: All, 1: Income, 2: Expense
   String _searchQuery = '';
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() => _selectedFilter = _tabController.index);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,43 +50,34 @@ class _TransactionsTabState extends State<TransactionsTab> {
           child: StreamBuilder<List<TransactionModel>>(
             stream: db.getTransactions(),
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
+              if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              var transactions = snapshot.data ?? [];
+              final transactions = snapshot.data ?? [];
 
-              // Filter by type
-              if (_selectedFilter == 1) {
-                transactions = transactions.where((t) => t.type == TransactionType.income).toList();
-              } else if (_selectedFilter == 2) {
-                transactions = transactions.where((t) => t.type == TransactionType.expense).toList();
-              }
-
-              // Filter by search query
-              if (_searchQuery.isNotEmpty) {
-                transactions = transactions
-                    .where((t) => t.title.toLowerCase().contains(_searchQuery.toLowerCase()))
-                    .toList();
-              }
-
-              if (transactions.isEmpty) {
-                return Center(
-                  child: Text(
-                    'No transactions found',
-                    style: GoogleFonts.inter(color: AppColors.textLight),
+              return TabBarView(
+                controller: _tabController,
+                children: [
+                  TransactionListView(
+                    transactions: transactions,
+                    filterIndex: 0,
+                    searchQuery: _searchQuery,
+                    format: currencyFormat,
                   ),
-                );
-              }
-
-              return ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: transactions.length,
-                itemBuilder: (context, index) {
-                  final tx = transactions[index];
-                  // Basic grouping logic for demo. Real app would group by date.
-                  return _transactionItem(tx, currencyFormat);
-                },
+                  TransactionListView(
+                    transactions: transactions,
+                    filterIndex: 1,
+                    searchQuery: _searchQuery,
+                    format: currencyFormat,
+                  ),
+                  TransactionListView(
+                    transactions: transactions,
+                    filterIndex: 2,
+                    searchQuery: _searchQuery,
+                    format: currencyFormat,
+                  ),
+                ],
               );
             },
           ),
@@ -83,12 +92,17 @@ class _TransactionsTabState extends State<TransactionsTab> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Icon(Icons.arrow_back_ios_new, size: 20),
+          Navigator.canPop(context)
+              ? IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                )
+              : const SizedBox(width: 48),
           Text(
             'Transactions',
             style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(width: 20), // Placeholder for balance
+          const SizedBox(width: 48), // To keep title centered
         ],
       ),
     );
@@ -138,35 +152,77 @@ class _TransactionsTabState extends State<TransactionsTab> {
   }
 
   Widget _buildFilterTabs() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _filterItem('All', 0),
-          _filterItem('Income', 1),
-          _filterItem('Expense', 2),
-        ],
-      ),
+    final screenWidth = MediaQuery.of(context).size.width;
+    final tabWidth = screenWidth / 3;
+    final indicatorWidth = tabWidth - 30;
+
+    return Column(
+      children: [
+        Stack(
+          children: [
+            AnimatedBuilder(
+              animation: _tabController.animation!,
+              builder: (context, child) {
+                return Row(
+                  children: [
+                    _filterItem('All', 0),
+                    _filterItem('Income', 1),
+                    _filterItem('Expense', 2),
+                  ],
+                );
+              },
+            ),
+            AnimatedBuilder(
+              animation: _tabController.animation!,
+              builder: (context, child) {
+                return Positioned(
+                  bottom: 0,
+                  left: (_tabController.animation!.value * tabWidth) + (tabWidth - indicatorWidth) / 2,
+                  child: Container(
+                    height: 3,
+                    width: indicatorWidth,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+      ],
     );
   }
 
   Widget _filterItem(String title, int index) {
-    final isSelected = _selectedFilter == index;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedFilter = index),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          title,
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-            color: isSelected ? Colors.white : AppColors.textLight,
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          _tabController.animateTo(index);
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Center(
+            child: AnimatedBuilder(
+              animation: _tabController.animation!,
+              builder: (context, child) {
+                final lerp = (1.0 - (_tabController.animation!.value - index).abs()).clamp(0.0, 1.0);
+                final color = Color.lerp(AppColors.textLight, AppColors.textDark, lerp);
+                final fontWeight = lerp > 0.5 ? FontWeight.w600 : FontWeight.w500;
+                
+                return Text(
+                  title,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: fontWeight,
+                    color: color,
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -225,6 +281,113 @@ class _TransactionsTabState extends State<TransactionsTab> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class TransactionListView extends StatefulWidget {
+  final List<TransactionModel> transactions;
+  final int filterIndex;
+  final String searchQuery;
+  final NumberFormat format;
+
+  const TransactionListView({
+    super.key,
+    required this.transactions,
+    required this.filterIndex,
+    required this.searchQuery,
+    required this.format,
+  });
+
+  @override
+  State<TransactionListView> createState() => _TransactionListViewState();
+}
+
+class _TransactionListViewState extends State<TransactionListView> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    var filtered = widget.transactions;
+    if (widget.filterIndex == 1) {
+      filtered = widget.transactions.where((t) => t.type == TransactionType.income).toList();
+    } else if (widget.filterIndex == 2) {
+      filtered = widget.transactions.where((t) => t.type == TransactionType.expense).toList();
+    }
+
+    if (widget.searchQuery.isNotEmpty) {
+      filtered = filtered.where((t) => t.title.toLowerCase().contains(widget.searchQuery.toLowerCase())).toList();
+    }
+
+    if (filtered.isEmpty) {
+      return Center(
+        child: Text(
+          'No transactions found',
+          style: GoogleFonts.inter(color: AppColors.textLight),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      itemCount: filtered.length,
+      itemBuilder: (context, index) {
+        final tx = filtered[index];
+        final isIncome = tx.type == TransactionType.income;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppCategories.getCategoryColor(tx.category).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  AppCategories.getCategoryIcon(tx.category),
+                  color: AppCategories.getCategoryColor(tx.category),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tx.title,
+                      style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
+                    ),
+                    Text(
+                      tx.category,
+                      style: GoogleFonts.inter(fontSize: 12, color: AppColors.textLight),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${isIncome ? '+' : '-'} ${widget.format.format(tx.amount)}',
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: isIncome ? AppColors.income : AppColors.textDark,
+                    ),
+                  ),
+                  Text(
+                    DateFormat('d MMM').format(tx.timestamp),
+                    style: GoogleFonts.inter(fontSize: 12, color: AppColors.textLight),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -17,6 +17,10 @@ class DatabaseService {
   DocumentReference get _budgetDoc => 
       _db.collection('users').doc(uid).collection('settings').doc('budget');
 
+  // Get user specific profile document path
+  DocumentReference get _profileDoc => 
+      _db.collection('users').doc(uid);
+
   // --- Transactions ---
 
   Stream<List<TransactionModel>> getTransactions() {
@@ -58,5 +62,23 @@ class DatabaseService {
 
   Future<void> setBudget(BudgetModel budget) async {
     await _budgetDoc.set(budget.toMap());
+  }
+
+  // --- User Profile ---
+
+  Stream<Map<String, dynamic>?> getUserProfile() {
+    return _profileDoc.snapshots().map((doc) {
+      if (doc.exists) {
+        return doc.data() as Map<String, dynamic>;
+      }
+      return null;
+    });
+  }
+
+  Future<void> updateUserProfile(String name, String phone) async {
+    await _profileDoc.set({
+      'displayName': name,
+      'phoneNumber': phone,
+    }, SetOptions(merge: true));
   }
 }

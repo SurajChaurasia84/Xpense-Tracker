@@ -15,8 +15,6 @@ class BudgetTab extends StatefulWidget {
 }
 
 class _BudgetTabState extends State<BudgetTab> {
-  String _selectedPeriod = 'Monthly';
-
   @override
   Widget build(BuildContext context) {
     final db = Provider.of<DatabaseService>(context);
@@ -32,8 +30,14 @@ class _BudgetTabState extends State<BudgetTab> {
               return const Center(child: CircularProgressIndicator());
             }
 
-            final transactions = txSnapshot.data ?? [];
+            final allTransactions = txSnapshot.data ?? [];
             final budget = budgetSnapshot.data;
+
+            // Default to Monthly filtering (Current month only)
+            final now = DateTime.now();
+            final startDate = DateTime(now.year, now.month, 1);
+
+            final transactions = allTransactions.where((tx) => tx.timestamp.isAfter(startDate)).toList();
 
             // Calculate spending by category
             Map<String, double> spendingByCategory = {};
@@ -43,6 +47,9 @@ class _BudgetTabState extends State<BudgetTab> {
               }
             }
 
+            // Get all 7 expense categories to show them hamesha
+            final allBudgetedCategories = AppCategories.expenseCategories.keys;
+
             return SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -50,22 +57,28 @@ class _BudgetTabState extends State<BudgetTab> {
                 children: [
                   const SizedBox(height: 30),
                   _buildHeader(),
-                  const SizedBox(height: 20),
-                  _buildPeriodSelector(),
+                  const SizedBox(height: 4),
+                  Center(
+                    child: Text(
+                      'Plan your budget for better financial control',
+                      style: GoogleFonts.inter(fontSize: 12, color: Colors.black38),
+                    ),
+                  ),
                   const SizedBox(height: 30),
-                  _buildTotalBudgetSection(budget?.totalBudget ?? 0, currencyFormat),
+                  _buildTotalBudgetSection(budget?.totalBudget ?? 0, currencyFormat, db),
                   const SizedBox(height: 30),
                   Text(
                     'Budget by Categories',
                     style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 20),
-                  ...spendingByCategory.entries.map((entry) {
-                    final categoryBudget = budget?.categoryBudgets[entry.key] ?? entry.value * 1.2; // fallback
-                    return _categoryBudgetItem(entry.key, entry.value, categoryBudget, currencyFormat);
+                  ...allBudgetedCategories.map((categoryName) {
+                    final spent = spendingByCategory[categoryName] ?? 0.0;
+                    final categoryBudget = budget?.categoryBudgets[categoryName] ?? 0.0;
+                    return _categoryBudgetItem(categoryName, spent, categoryBudget, currencyFormat);
                   }).toList(),
                   const SizedBox(height: 20),
-                  _buildAddCategoryButton(),
+                  _buildAddCategoryButton(db, budget),
                 ],
               ),
             );
@@ -84,50 +97,7 @@ class _BudgetTabState extends State<BudgetTab> {
     );
   }
 
-  Widget _buildPeriodSelector() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Select Period',
-          style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textDark),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: ['Weekly', 'Monthly', 'Yearly'].map((period) {
-            final isSelected = _selectedPeriod == period;
-            return Expanded(
-              child: GestureDetector(
-                onTap: () => setState(() => _selectedPeriod = period),
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primary : Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: isSelected ? AppColors.primary : Colors.black12),
-                  ),
-                  child: Center(
-                    child: Text(
-                      period,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        color: isSelected ? Colors.white : AppColors.textLight,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTotalBudgetSection(double amount, NumberFormat format) {
+  Widget _buildTotalBudgetSection(double amount, NumberFormat format, DatabaseService db) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -136,22 +106,84 @@ class _BudgetTabState extends State<BudgetTab> {
           style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textDark),
         ),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            Text(
-              format.format(amount),
-              style: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.textDark),
-            ),
-            const SizedBox(width: 12),
-            const Icon(Icons.edit_outlined, color: AppColors.textLight, size: 20),
-          ],
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.black.withOpacity(0.05)),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 5)),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                format.format(amount),
+                style: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.textDark),
+              ),
+              GestureDetector(
+                onTap: () => _showSetBudgetDialog(context, db, amount),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.edit_outlined, color: AppColors.primary, size: 20),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 
+  void _showSetBudgetDialog(BuildContext context, DatabaseService db, double currentBudget) {
+    final controller = TextEditingController(text: currentBudget > 0 ? currentBudget.toInt().toString() : '');
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Set Total Budget', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            prefixText: '₹ ',
+            hintText: 'Enter Amount',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              final newBudget = double.tryParse(controller.text) ?? 0;
+              await db.setBudget(BudgetModel(
+                totalBudget: newBudget, 
+                period: 'Monthly',
+                categoryBudgets: {}
+              ));
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _categoryBudgetItem(String name, double spent, double total, NumberFormat format) {
-    final percentage = (spent / total).clamp(0.0, 1.0);
+    final hasBudget = total > 0;
+    final percentage = hasBudget ? (spent / total).clamp(0.0, 1.0) : 0.0;
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
       child: Column(
@@ -175,7 +207,10 @@ class _BudgetTabState extends State<BudgetTab> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(name, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
-                        Text(format.format(total), style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 14)),
+                        Text(
+                          hasBudget ? format.format(total) : 'No Limit', 
+                          style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 14, color: hasBudget ? Colors.black : Colors.black38),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -184,7 +219,7 @@ class _BudgetTabState extends State<BudgetTab> {
                       child: LinearProgressIndicator(
                         value: percentage,
                         backgroundColor: Colors.black12,
-                        valueColor: AlwaysStoppedAnimation<Color>(AppCategories.getCategoryColor(name)),
+                        valueColor: AlwaysStoppedAnimation<Color>(hasBudget ? AppCategories.getCategoryColor(name) : Colors.grey),
                         minHeight: 6,
                       ),
                     ),
@@ -192,7 +227,10 @@ class _BudgetTabState extends State<BudgetTab> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('${(percentage * 100).toStringAsFixed(0)}%', style: GoogleFonts.inter(fontSize: 11, color: AppColors.textLight)),
+                        Text(
+                          hasBudget ? '${(percentage * 100).toStringAsFixed(0)}%' : '0%', 
+                          style: GoogleFonts.inter(fontSize: 11, color: AppColors.textLight),
+                        ),
                         Text('Spent ${format.format(spent)}', style: GoogleFonts.inter(fontSize: 11, color: AppColors.textLight)),
                       ],
                     ),
@@ -206,19 +244,83 @@ class _BudgetTabState extends State<BudgetTab> {
     );
   }
 
-  Widget _buildAddCategoryButton() {
+  Widget _buildAddCategoryButton(DatabaseService db, BudgetModel? currentBudget) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: () {},
+        onPressed: () => _showAddCategoryBudgetDialog(context, db, currentBudget),
         icon: const Icon(Icons.add),
-        label: const Text('Add Category'),
+        label: const Text('Add Category Budget'),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           elevation: 0,
+        ),
+      ),
+    );
+  }
+
+  void _showAddCategoryBudgetDialog(BuildContext context, DatabaseService db, BudgetModel? currentBudget) {
+    String selectedCategory = AppCategories.expenseCategories.keys.first;
+    final controller = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text('Category Budget', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                value: selectedCategory,
+                decoration: InputDecoration(
+                  labelText: 'Select Category',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                items: AppCategories.expenseCategories.keys.map((cat) => DropdownMenuItem(value: cat, child: Text(cat))).toList(),
+                onChanged: (val) => setDialogState(() => selectedCategory = val!),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Budget Amount',
+                  prefixText: '₹ ',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () async {
+                final amount = double.tryParse(controller.text) ?? 0;
+                if (amount > 0) {
+                  final newCategoryBudgets = Map<String, double>.from(currentBudget?.categoryBudgets ?? {});
+                  newCategoryBudgets[selectedCategory] = amount;
+                  
+                  await db.setBudget(BudgetModel(
+                    totalBudget: currentBudget?.totalBudget ?? 0,
+                    period: 'Monthly',
+                    categoryBudgets: newCategoryBudgets,
+                  ));
+                }
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: const Text('Add'),
+            ),
+          ],
         ),
       ),
     );

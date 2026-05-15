@@ -30,75 +30,84 @@ class _HomeTabState extends State<HomeTab> {
   @override
   Widget build(BuildContext context) {
     final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 0);
+    final db = Provider.of<DatabaseService>(context);
+    final user = FirebaseAuth.instance.currentUser;
 
-    return StreamBuilder<List<TransactionModel>>(
-      stream: _transactionsStream,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    return StreamBuilder<Map<String, dynamic>?>(
+      stream: db.getUserProfile(),
+      builder: (context, profileSnapshot) {
+        final profileData = profileSnapshot.data;
+        final customName = profileData?['displayName'];
+        final displayName = customName ?? user?.displayName ?? 'User';
 
-        final transactions = snapshot.data ?? [];
-        double totalIncome = 0;
-        double totalExpense = 0;
-
-        for (var tx in transactions) {
-          if (tx.type == TransactionType.income) {
-            totalIncome += tx.amount;
-          } else {
-            totalExpense += tx.amount;
-          }
-        }
-
-        double balance = totalIncome - totalExpense;
-
-        // Calculate this month's status
-        final now = DateTime.now();
-        final thisMonthStart = DateTime(now.year, now.month, 1);
-        double thisMonthIncome = 0;
-        double thisMonthExpense = 0;
-        
-        for (var tx in transactions) {
-          if (tx.timestamp.isAfter(thisMonthStart)) {
-            if (tx.type == TransactionType.income) {
-              thisMonthIncome += tx.amount;
-            } else {
-              thisMonthExpense += tx.amount;
+        return StreamBuilder<List<TransactionModel>>(
+          stream: _transactionsStream,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
             }
-          }
-        }
-        
-        double thisMonthSavings = thisMonthIncome - thisMonthExpense;
-        double savingsPercent = thisMonthIncome > 0 
-            ? (thisMonthSavings / thisMonthIncome) * 100 
-            : 0;
 
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              _buildHeader(context),
-              const SizedBox(height: 20),
-              _buildBalanceCard(balance, savingsPercent, currencyFormat),
-              const SizedBox(height: 20),
-              _buildQuickSummary(totalIncome, totalExpense, currencyFormat),
-              const SizedBox(height: 30),
-              _buildSpendingOverview(transactions, totalExpense, currencyFormat),
-              const SizedBox(height: 30),
-              _buildRecentTransactions(context, transactions, currencyFormat),
-            ],
-          ),
+            final transactions = snapshot.data ?? [];
+            double totalIncome = 0;
+            double totalExpense = 0;
+
+            for (var tx in transactions) {
+              if (tx.type == TransactionType.income) {
+                totalIncome += tx.amount;
+              } else {
+                totalExpense += tx.amount;
+              }
+            }
+
+            double balance = totalIncome - totalExpense;
+
+            // Calculate this month's status
+            final now = DateTime.now();
+            final thisMonthStart = DateTime(now.year, now.month, 1);
+            double thisMonthIncome = 0;
+            double thisMonthExpense = 0;
+            
+            for (var tx in transactions) {
+              if (tx.timestamp.isAfter(thisMonthStart)) {
+                if (tx.type == TransactionType.income) {
+                  thisMonthIncome += tx.amount;
+                } else {
+                  thisMonthExpense += tx.amount;
+                }
+              }
+            }
+            
+            double thisMonthSavings = thisMonthIncome - thisMonthExpense;
+            double savingsPercent = thisMonthIncome > 0 
+                ? (thisMonthSavings / thisMonthIncome) * 100 
+                : 0;
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20),
+                  _buildHeader(context, displayName),
+                  const SizedBox(height: 20),
+                  _buildBalanceCard(balance, savingsPercent, currencyFormat),
+                  const SizedBox(height: 20),
+                  _buildQuickSummary(totalIncome, totalExpense, currencyFormat),
+                  const SizedBox(height: 30),
+                  _buildSpendingOverview(transactions, totalExpense, currencyFormat),
+                  const SizedBox(height: 30),
+                  _buildRecentTransactions(context, transactions, currencyFormat),
+                ],
+              ),
+            );
+          },
         );
       },
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    final displayName = user?.displayName ?? 'User';
-    final firstName = displayName.split(' ')[0];
+  Widget _buildHeader(BuildContext context, String name) {
+    final firstName = name.split(' ')[0];
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,

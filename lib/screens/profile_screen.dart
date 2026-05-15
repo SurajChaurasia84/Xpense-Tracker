@@ -11,6 +11,9 @@ import '../utils/constants.dart';
 import '../services/security_service.dart';
 import 'personal_info_screen.dart';
 import 'security_settings_screen.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -72,10 +75,10 @@ class ProfileScreen extends StatelessWidget {
                                     ? CachedNetworkImage(
                                         imageUrl: user!.photoURL!,
                                         fit: BoxFit.cover,
-                                        placeholder: (context, url) => Icon(Icons.person, size: 50, color: themeColor),
-                                        errorWidget: (context, url, error) => Icon(Icons.person, size: 50, color: themeColor),
+                                        placeholder: (context, url) => _buildInitialFallback(displayName, themeColor),
+                                        errorWidget: (context, url, error) => _buildInitialFallback(displayName, themeColor),
                                       )
-                                    : Icon(Icons.person, size: 50, color: themeColor),
+                                    : _buildInitialFallback(displayName, themeColor),
                               ),
                             ),
                             const SizedBox(height: 15),
@@ -113,11 +116,13 @@ class ProfileScreen extends StatelessWidget {
                         
                         const SizedBox(height: 30),
                         
-                        // Settings List
-                        Container(
+                        // Settings Sections
+                        Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              _buildSectionTitle('Account Settings'),
                               _buildSettingsItem(
                                 Icons.person_outline, 
                                 'Personal Info', 
@@ -141,11 +146,36 @@ class ProfileScreen extends StatelessWidget {
                                   MaterialPageRoute(builder: (context) => const SecuritySettingsScreen()),
                                 ),
                               ),
-                              const SizedBox(height: 20),
+                              
+                              const SizedBox(height: 25),
+                              _buildSectionTitle('More Options'),
+                              _buildSettingsItem(
+                                Icons.privacy_tip_outlined, 
+                                'Privacy Policy', 
+                                'How we protect your data',
+                                onTap: () => launchUrl(Uri.parse('https://surajchaurasia84.github.io/privacy-policy/')),
+                              ),
+                              _buildSettingsItem(
+                                Icons.share_outlined, 
+                                'Share App', 
+                                'Invite your friends',
+                                onTap: () => Share.share(
+                                  "Hey! Checkout Xpense Tracker to manage your finances easily. It's awesome! Download it from Play Store: https://play.google.com/store/apps/details?id=com.xpensetracker.finance.apps",
+                                  subject: 'Download Xpense Tracker App',
+                                ),
+                              ),
+                              _buildSettingsItem(
+                                Icons.help_outline_rounded, 
+                                'Contact Us', 
+                                'Feedback, Help & Support',
+                                onTap: () => launchUrl(Uri.parse('mailto:xpensetracker95@gmail.com?subject=Support - Xpense Tracker')),
+                              ),
+                              
+                              const SizedBox(height: 25),
                               
                               // Logout Button
                               GestureDetector(
-                                onTap: () => FirebaseAuth.instance.signOut(),
+                                onTap: () => _showLogoutConfirmation(context),
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(vertical: 15),
                                   decoration: BoxDecoration(
@@ -169,6 +199,27 @@ class ProfileScreen extends StatelessWidget {
                                   ),
                                 ),
                               ),
+                              
+                              const SizedBox(height: 30),
+                              
+                              // App Version
+                              Center(
+                                child: FutureBuilder<PackageInfo>(
+                                  future: PackageInfo.fromPlatform(),
+                                  builder: (context, snapshot) {
+                                    final version = snapshot.data?.version ?? '1.0.0';
+                                    final buildNumber = snapshot.data?.buildNumber ?? '1';
+                                    return Text(
+                                      'Version $version ($buildNumber)',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 12,
+                                        color: Colors.black26,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -181,6 +232,66 @@ class ProfileScreen extends StatelessWidget {
             },
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildInitialFallback(String name, Color color) {
+    return Center(
+      child: Text(
+        name.isNotEmpty ? name[0].toUpperCase() : 'U',
+        style: GoogleFonts.outfit(
+          fontSize: 40,
+          fontWeight: FontWeight.bold,
+          color: color,
+        ),
+      ),
+    );
+  }
+
+  void _showLogoutConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Sign Out', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+        content: Text(
+          'Are you sure you want to sign out of your account?',
+          style: GoogleFonts.inter(color: Colors.black54),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: GoogleFonts.inter(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              FirebaseAuth.instance.signOut();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text('Confirm', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 5, bottom: 12),
+      child: Text(
+        title,
+        style: GoogleFonts.inter(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: const Color(0xFF2E7D32),
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }

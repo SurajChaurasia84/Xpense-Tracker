@@ -37,19 +37,26 @@ class HomeTab extends StatelessWidget {
 
         double balance = totalIncome - totalExpense;
 
-        // Calculate this month's savings
+        // Calculate this month's status
         final now = DateTime.now();
         final thisMonthStart = DateTime(now.year, now.month, 1);
-        double thisMonthSavings = 0;
+        double thisMonthIncome = 0;
+        double thisMonthExpense = 0;
+        
         for (var tx in transactions) {
           if (tx.timestamp.isAfter(thisMonthStart)) {
             if (tx.type == TransactionType.income) {
-              thisMonthSavings += tx.amount;
+              thisMonthIncome += tx.amount;
             } else {
-              thisMonthSavings -= tx.amount;
+              thisMonthExpense += tx.amount;
             }
           }
         }
+        
+        double thisMonthSavings = thisMonthIncome - thisMonthExpense;
+        double savingsPercent = thisMonthIncome > 0 
+            ? (thisMonthSavings / thisMonthIncome) * 100 
+            : 0;
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -59,7 +66,7 @@ class HomeTab extends StatelessWidget {
               const SizedBox(height: 20),
               _buildHeader(context),
               const SizedBox(height: 20),
-              _buildBalanceCard(balance, thisMonthSavings, currencyFormat),
+              _buildBalanceCard(balance, savingsPercent, currencyFormat),
               const SizedBox(height: 20),
               _buildQuickSummary(totalIncome, totalExpense, currencyFormat),
               const SizedBox(height: 30),
@@ -119,8 +126,8 @@ class HomeTab extends StatelessWidget {
     );
   }
 
-  Widget _buildBalanceCard(double balance, double monthlySavings, NumberFormat format) {
-    final isPositive = monthlySavings >= 0;
+  Widget _buildBalanceCard(double balance, double savingsPercent, NumberFormat format) {
+    final isPositive = savingsPercent >= 0;
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -194,7 +201,7 @@ class HomeTab extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${format.format(monthlySavings.abs())} this month',
+                          '${savingsPercent.toStringAsFixed(1)}% savings this month',
                           style: GoogleFonts.inter(color: Colors.white, fontSize: 12),
                         ),
                       ],
@@ -382,7 +389,7 @@ class HomeTab extends StatelessWidget {
   }
 
   Widget _buildRecentTransactions(List<TransactionModel> transactions, NumberFormat format) {
-    final recent = transactions.take(3).toList();
+    final recent = transactions.take(10).toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

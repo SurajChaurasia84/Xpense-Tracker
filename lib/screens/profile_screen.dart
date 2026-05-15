@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:animate_do/animate_do.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -19,102 +18,91 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 60),
             
             // Profile Header
-            FadeInDown(
-              duration: const Duration(milliseconds: 800),
-              child: Column(
+            Column(
+              children: [
+                CircleAvatar(
+                  radius: 50,
+                  backgroundColor: themeColor.withOpacity(0.1),
+                  backgroundImage: user?.photoURL != null 
+                      ? NetworkImage(user!.photoURL!) 
+                      : null,
+                  child: user?.photoURL == null 
+                      ? Icon(Icons.person, size: 50, color: themeColor)
+                      : null,
+                ),
+                const SizedBox(height: 15),
+                Text(
+                  user?.displayName ?? 'User Name',
+                  style: GoogleFonts.outfit(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                Text(
+                  user?.email ?? 'user@example.com',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: Colors.black45,
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 30),
+            
+            // Stats Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: themeColor.withOpacity(0.1),
-                    backgroundImage: user?.photoURL != null 
-                        ? NetworkImage(user!.photoURL!) 
-                        : null,
-                    child: user?.photoURL == null 
-                        ? Icon(Icons.person, size: 50, color: themeColor)
-                        : null,
-                  ),
-                  const SizedBox(height: 15),
-                  Text(
-                    user?.displayName ?? 'User Name',
-                    style: GoogleFonts.outfit(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  Text(
-                    user?.email ?? 'user@example.com',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      color: Colors.black45,
-                    ),
-                  ),
+                  _buildStatCard('Total Spent', '₹ 12,450', Icons.arrow_downward, Colors.red),
+                  const SizedBox(width: 15),
+                  _buildStatCard('Budgets', '04 Active', Icons.pie_chart, themeColor),
                 ],
               ),
             ),
             
             const SizedBox(height: 30),
             
-            // Stats Section
-            FadeInUp(
-              duration: const Duration(milliseconds: 800),
-              delay: const Duration(milliseconds: 200),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    _buildStatCard('Total Spent', '₹ 12,450', Icons.arrow_downward, Colors.red),
-                    const SizedBox(width: 15),
-                    _buildStatCard('Budgets', '04 Active', Icons.pie_chart, themeColor),
-                  ],
-                ),
-              ),
-            ),
-            
-            const SizedBox(height: 30),
-            
             // Settings List
-            FadeInUp(
-              duration: const Duration(milliseconds: 800),
-              delay: const Duration(milliseconds: 400),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                    _buildSettingsItem(Icons.person_outline, 'Personal Info', 'Name, Email, Phone'),
-                    _buildSettingsItem(Icons.notifications_none_rounded, 'Notifications', 'App alerts & updates'),
-                    _buildSettingsItem(Icons.security_rounded, 'Security', 'PIN, Fingerprint'),
-                    _buildSettingsItem(Icons.language_rounded, 'Language', 'English (UK)'),
-                    const SizedBox(height: 20),
-                    
-                    // Logout Button
-                    GestureDetector(
-                      onTap: () => FirebaseAuth.instance.signOut(),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(15),
-                          border: Border.all(color: Colors.red.withOpacity(0.1)),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.logout_rounded, color: Colors.red),
-                            const SizedBox(width: 10),
-                            Text(
-                              'Sign Out',
-                              style: GoogleFonts.inter(
-                                color: Colors.red,
-                                fontWeight: FontWeight.bold,
-                              ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  _buildSettingsItem(Icons.person_outline, 'Personal Info', 'Name, Email, Phone'),
+                  _buildSettingsItem(Icons.notifications_none_rounded, 'Notifications', 'App alerts & updates'),
+                  _buildSettingsItem(Icons.security_rounded, 'Security', 'PIN, Fingerprint'),
+                  _buildSettingsItem(Icons.language_rounded, 'Language', 'English (UK)'),
+                  const SizedBox(height: 20),
+                  
+                  // Logout Button
+                  GestureDetector(
+                    onTap: () => FirebaseAuth.instance.signOut(),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(color: Colors.red.withOpacity(0.1)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.logout_rounded, color: Colors.red),
+                          const SizedBox(width: 10),
+                          Text(
+                            'Sign Out',
+                            style: GoogleFonts.inter(
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 100), // Space for bottom bar

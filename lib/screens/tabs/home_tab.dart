@@ -340,7 +340,10 @@ class HomeTab extends StatelessWidget {
             const SizedBox(width: 20),
             Expanded(
               child: Column(
-                children: categoryData.entries.map((entry) {
+                children: (categoryData.entries.toList()
+                      ..sort((a, b) => b.value.compareTo(a.value)))
+                    .take(6)
+                    .map((entry) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Row(

@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/transaction_model.dart';
 import '../../services/database_service.dart';
 import '../../utils/constants.dart';
+import 'transactions_tab.dart';
 
 class HomeTab extends StatelessWidget {
   const HomeTab({super.key});
@@ -72,7 +73,7 @@ class HomeTab extends StatelessWidget {
               const SizedBox(height: 30),
               _buildSpendingOverview(transactions, totalExpense, currencyFormat),
               const SizedBox(height: 30),
-              _buildRecentTransactions(transactions, currencyFormat),
+              _buildRecentTransactions(context, transactions, currencyFormat),
             ],
           ),
         );
@@ -388,7 +389,7 @@ class HomeTab extends StatelessWidget {
     );
   }
 
-  Widget _buildRecentTransactions(List<TransactionModel> transactions, NumberFormat format) {
+  Widget _buildRecentTransactions(BuildContext context, List<TransactionModel> transactions, NumberFormat format) {
     final recent = transactions.take(10).toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -400,9 +401,22 @@ class HomeTab extends StatelessWidget {
               'Recent Transactions',
               style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            Text(
-              'View all',
-              style: GoogleFonts.inter(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const Scaffold(
+                      backgroundColor: Color(0xFFF8F9FB),
+                      body: TransactionsTab(),
+                    ),
+                  ),
+                );
+              },
+              child: Text(
+                'View all',
+                style: GoogleFonts.inter(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600),
+              ),
             ),
           ],
         ),

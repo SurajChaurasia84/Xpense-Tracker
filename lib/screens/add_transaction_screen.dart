@@ -51,6 +51,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               _selectedType == TransactionType.income ? 'Source' : 'Title',
               _selectedType == TransactionType.income ? 'Where did you get it from?' : 'What did you spend on?',
               _titleController,
+              textCapitalization: TextCapitalization.sentences,
             ),
             const SizedBox(height: 25),
             _buildTextField('Amount', '0.00', _amountController, keyboardType: TextInputType.number),
@@ -104,7 +105,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
-  Widget _buildTextField(String label, String hint, TextEditingController controller, {TextInputType? keyboardType}) {
+  Widget _buildTextField(String label, String hint, TextEditingController controller, {TextInputType? keyboardType, TextCapitalization textCapitalization = TextCapitalization.none}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -122,6 +123,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           child: TextField(
             controller: controller,
             keyboardType: keyboardType,
+            textCapitalization: textCapitalization,
             style: GoogleFonts.inter(fontWeight: FontWeight.w500),
             decoration: InputDecoration(
               hintText: hint,

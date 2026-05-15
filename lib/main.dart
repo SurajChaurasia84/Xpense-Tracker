@@ -42,10 +42,16 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Xpense Tracker',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2E7D32)),
-          useMaterial3: true,
-        ),
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2E7D32)),
+            useMaterial3: true,
+            pageTransitionsTheme: const PageTransitionsTheme(
+              builders: {
+                TargetPlatform.android: ZoomPageTransitionsBuilder(),
+                TargetPlatform.iOS: ZoomPageTransitionsBuilder(),
+              },
+            ),
+          ),
         home: const AuthWrapper(),
       ),
     );

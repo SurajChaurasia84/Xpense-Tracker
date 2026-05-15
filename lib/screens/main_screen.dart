@@ -28,60 +28,71 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     const themeColor = Color(0xFF2E7D32);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FB),
-      body: _screens[_currentIndex],
-      
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        padding: EdgeInsets.zero,
-        height: 66,
-        child: Container(
-          decoration: const BoxDecoration(
-            border: Border(
-              top: BorderSide(color: Colors.black12, width: 0.5),
+    return PopScope(
+      canPop: _currentIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_currentIndex != 0) {
+          setState(() {
+            _currentIndex = 0;
+          });
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8F9FB),
+        body: _screens[_currentIndex],
+        
+        bottomNavigationBar: BottomAppBar(
+          color: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          padding: EdgeInsets.zero,
+          height: 66,
+          child: Container(
+            decoration: const BoxDecoration(
+              border: Border(
+                top: BorderSide(color: Colors.black12, width: 0.5),
+              ),
             ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _navItem(Icons.home, Icons.home_outlined, 'Home', 0),
-              _navItem(Icons.payments, Icons.payments_outlined, 'Transactions', 1),
-              
-              // Integrated "+" button
-              Transform.translate(
-                offset: const Offset(0, -16),
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const AddTransactionScreen()),
-                    );
-                  },
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: themeColor,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: themeColor.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _navItem(Icons.home, Icons.home_outlined, 'Home', 0),
+                _navItem(Icons.payments, Icons.payments_outlined, 'Transactions', 1),
+                
+                // Integrated "+" button
+                Transform.translate(
+                  offset: const Offset(0, -16),
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const AddTransactionScreen()),
+                      );
+                    },
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: themeColor,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: themeColor.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.add, color: Colors.white, size: 28),
                     ),
-                    child: const Icon(Icons.add, color: Colors.white, size: 28),
                   ),
                 ),
-              ),
-              
-              _navItem(Icons.account_balance_wallet, Icons.account_balance_wallet_outlined, 'Budget', 3),
-              _navItem(Icons.person, Icons.person_outline, 'Profile', 4),
-            ],
+                
+                _navItem(Icons.account_balance_wallet, Icons.account_balance_wallet_outlined, 'Budget', 3),
+                _navItem(Icons.person, Icons.person_outline, 'Profile', 4),
+              ],
+            ),
           ),
         ),
       ),

@@ -134,18 +134,6 @@ class _TransactionsTabState extends State<TransactionsTab> with SingleTickerProv
               ),
             ),
           ),
-          const SizedBox(width: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10),
-              ],
-            ),
-            child: const Icon(Icons.tune, size: 20),
-          ),
         ],
       ),
     );

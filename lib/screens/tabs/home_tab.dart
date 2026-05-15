@@ -404,7 +404,7 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildRecentTransactions(BuildContext context, List<TransactionModel> transactions, NumberFormat format) {
-    final recent = transactions.take(10).toList();
+    final recent = transactions.take(7).toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

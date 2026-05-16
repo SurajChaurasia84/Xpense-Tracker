@@ -38,7 +38,9 @@ class _HomeTabState extends State<HomeTab> {
       builder: (context, profileSnapshot) {
         final profileData = profileSnapshot.data;
         final customName = profileData?['displayName'];
-        final displayName = customName ?? user?.displayName ?? 'User';
+        final displayName = (customName != null && customName.toString().trim().isNotEmpty)
+            ? customName
+            : (user?.displayName ?? 'User');
 
         return StreamBuilder<List<TransactionModel>>(
           stream: _transactionsStream,

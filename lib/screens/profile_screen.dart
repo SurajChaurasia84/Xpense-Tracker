@@ -34,7 +34,9 @@ class ProfileScreen extends StatelessWidget {
           final customName = profileData?['displayName'];
           final customPhone = profileData?['phoneNumber'];
           
-          final displayName = customName ?? user?.displayName ?? 'User Name';
+          final displayName = (customName != null && customName.toString().trim().isNotEmpty)
+              ? customName
+              : (user?.displayName ?? 'User Name');
 
           return StreamBuilder<List<TransactionModel>>(
             stream: db.getTransactions(),

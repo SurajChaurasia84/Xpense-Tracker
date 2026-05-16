@@ -35,7 +35,7 @@ void main() async {
   if (Platform.isAndroid) {
     UnityAds.init(
       gameId: '6116386',
-      testMode: true,
+      testMode: false,
       onComplete: () => print('Unity Ads Initialization Complete'),
       onFailed: (error, message) => print('Unity Ads Initialization Failed: [$error] $message'),
     );

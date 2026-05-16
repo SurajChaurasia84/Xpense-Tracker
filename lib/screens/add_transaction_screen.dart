@@ -18,6 +18,21 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   String _selectedCategory = ''; // No default category
   TransactionType _selectedType = TransactionType.expense;
   bool _isLoading = false;
+  late PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: _selectedType == TransactionType.income ? 0 : 1);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    _titleController.dispose();
+    _amountController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,27 +55,55 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         ),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildTypeSelector(),
-            const SizedBox(height: 30),
-            _buildTextField(
-              _selectedType == TransactionType.income ? 'Source' : 'Title',
-              _selectedType == TransactionType.income ? 'Where did you get it from?' : 'What did you spend on?',
-              _titleController,
-              textCapitalization: TextCapitalization.sentences,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+            child: _buildTypeSelector(),
+          ),
+          Expanded(
+            child: PageView(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() {
+                  _selectedType = index == 0 ? TransactionType.income : TransactionType.expense;
+                  _selectedCategory = ''; // Reset category on swipe
+                });
+              },
+              children: [
+                _buildFormContent(TransactionType.income),
+                _buildFormContent(TransactionType.expense),
+              ],
             ),
-            const SizedBox(height: 25),
-            _buildTextField('Amount', '0.00', _amountController, keyboardType: TextInputType.number),
-            const SizedBox(height: 25),
-            _buildCategorySelector(),
-            const SizedBox(height: 50),
-            _buildSubmitButton(),
-          ],
-        ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+            child: _buildSubmitButton(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormContent(TransactionType type) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 30),
+          _buildTextField(
+            type == TransactionType.income ? 'Source' : 'Title',
+            type == TransactionType.income ? 'Where did you get it from?' : 'What did you spend on?',
+            _titleController,
+            textCapitalization: TextCapitalization.sentences,
+          ),
+          const SizedBox(height: 25),
+          _buildTextField('Amount', '0.00', _amountController, keyboardType: TextInputType.number),
+          const SizedBox(height: 25),
+          _buildCategorySelector(type),
+          const SizedBox(height: 50),
+        ],
       ),
     );
   }
@@ -85,7 +128,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final isSelected = _selectedType == type;
     final color = type == TransactionType.income ? AppColors.income : AppColors.expense;
     return GestureDetector(
-      onTap: () => setState(() => _selectedType = type),
+      onTap: () {
+        _pageController.animateToPage(
+          type == TransactionType.income ? 0 : 1,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
@@ -136,8 +185,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
-  Widget _buildCategorySelector() {
-    final categories = _selectedType == TransactionType.income
+  Widget _buildCategorySelector(TransactionType type) {
+    final categories = type == TransactionType.income
         ? AppCategories.incomeCategories
         : AppCategories.expenseCategories;
 

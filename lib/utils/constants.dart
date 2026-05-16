@@ -12,16 +12,18 @@ class AppColors {
 
 class AppCategories {
   static const Map<String, Map<String, dynamic>> expenseCategories = {
+    'Person': {'icon': Icons.person_rounded, 'color': Color(0xFF3F51B5)},
     'Housing': {'icon': Icons.home_rounded, 'color': Color(0xFF448AFF)},
-    'Food': {'icon': Icons.restaurant_rounded, 'color': Color(0xFF4CAF50)},
     'Transport': {'icon': Icons.directions_car_rounded, 'color': Color(0xFFFF9800)},
+    'Food': {'icon': Icons.restaurant_rounded, 'color': Color(0xFF4CAF50)},
     'Shopping': {'icon': Icons.shopping_bag_rounded, 'color': Color(0xFFE91E63)},
-    'Entertainment': {'icon': Icons.movie_rounded, 'color': Color(0xFF9C27B0)},
     'Utilities': {'icon': Icons.electric_bolt_rounded, 'color': Color(0xFFFFC107)},
+    'Entertainment': {'icon': Icons.movie_rounded, 'color': Color(0xFF9C27B0)},
     'Others': {'icon': Icons.grid_view_rounded, 'color': Color(0xFF607D8B)},
   };
 
   static const Map<String, Map<String, dynamic>> incomeCategories = {
+    'Person': {'icon': Icons.person_rounded, 'color': Color(0xFF3F51B5)},
     'Salary': {'icon': Icons.payments_rounded, 'color': Color(0xFF2E7D32)},
     'Freelance': {'icon': Icons.laptop_mac_rounded, 'color': Color(0xFF00ACC1)},
     'Gift': {'icon': Icons.card_giftcard_rounded, 'color': Color(0xFFFF4081)},

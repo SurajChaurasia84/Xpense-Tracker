@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:unity_ads_plugin/unity_ads_plugin.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
@@ -29,6 +31,16 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  if (Platform.isAndroid) {
+    UnityAds.init(
+      gameId: '6116386',
+      testMode: true,
+      onComplete: () => print('Unity Ads Initialization Complete'),
+      onFailed: (error, message) => print('Unity Ads Initialization Failed: [$error] $message'),
+    );
+  }
+
   runApp(const MyApp());
 }
 

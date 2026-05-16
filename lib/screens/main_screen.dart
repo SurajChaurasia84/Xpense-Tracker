@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:unity_ads_plugin/unity_ads_plugin.dart';
 import 'profile_screen.dart';
 import 'tabs/home_tab.dart';
 import 'tabs/transactions_tab.dart';
@@ -15,6 +17,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  bool _isAdLoaded = false;
 
   final List<Widget> _screens = [
     const HomeTab(),
@@ -40,25 +43,52 @@ class _MainScreenState extends State<MainScreen> {
       },
       child: Scaffold(
         backgroundColor: const Color(0xFFF8F9FB),
-        body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        transitionBuilder: (Widget child, Animation<double> animation) {
-          return FadeTransition(
-            opacity: animation,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0.02, 0),
-                end: Offset.zero,
-              ).animate(animation),
-              child: child,
+        body: Column(
+          children: [
+            Expanded(
+              child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0.02, 0),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  ),
+                );
+              },
+              child: Container(
+                key: ValueKey<int>(_currentIndex),
+                child: _screens[_currentIndex],
+              ),
             ),
-          );
-        },
-        child: Container(
-          key: ValueKey<int>(_currentIndex),
-          child: _screens[_currentIndex],
+            ),
+            if (Platform.isAndroid && _currentIndex != 2)
+              Visibility(
+                visible: _isAdLoaded,
+                maintainState: true,
+                child: UnityBannerAd(
+                  placementId: 'Banner_Android',
+                  onLoad: (placementId) {
+                    print('Banner loaded: $placementId');
+                    setState(() {
+                      _isAdLoaded = true;
+                    });
+                  },
+                  onClick: (placementId) => print('Banner clicked: $placementId'),
+                  onFailed: (placementId, error, message) {
+                    print('Banner failed: [$error] $message');
+                    setState(() {
+                      _isAdLoaded = false;
+                    });
+                  },
+                ),
+              ),
+          ],
         ),
-      ),
         
         bottomNavigationBar: BottomAppBar(
           color: Colors.white,

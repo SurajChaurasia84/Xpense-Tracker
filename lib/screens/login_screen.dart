@@ -177,7 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () {
-                                      launchUrl(Uri.parse('https://google.com'));
+                                      launchUrl(Uri.parse('https://surajchaurasia84.github.io/Xpense-Tracker/'));
                                     },
                                 ),
                                 const TextSpan(text: '.'),

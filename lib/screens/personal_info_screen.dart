@@ -92,12 +92,15 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
               label: 'Full Name',
               controller: _nameController,
               icon: Icons.person_outline,
+              hint: 'Enter your full name',
+              textCapitalization: TextCapitalization.words,
             ),
             const SizedBox(height: 20),
             _buildTextField(
               label: 'Phone Number',
               controller: _phoneController,
               icon: Icons.phone_outlined,
+              hint: 'Enter your phone number',
               keyboardType: TextInputType.phone,
             ),
             const Spacer(),
@@ -127,7 +130,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     required String label,
     required TextEditingController controller,
     required IconData icon,
+    required String hint,
     TextInputType keyboardType = TextInputType.text,
+    TextCapitalization textCapitalization = TextCapitalization.none,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,9 +142,12 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
         TextField(
           controller: controller,
           keyboardType: keyboardType,
+          textCapitalization: textCapitalization,
           style: GoogleFonts.inter(fontWeight: FontWeight.w500),
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: const Color(0xFF2E7D32)),
+            hintText: hint,
+            hintStyle: GoogleFonts.inter(color: Colors.black26, fontSize: 14),
             filled: true,
             fillColor: const Color(0xFFF8F9FB),
             border: OutlineInputBorder(
